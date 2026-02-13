@@ -4,7 +4,7 @@ name: terraform CI/CD
 on:
   workflow_dispatch: # Allow manual triggering of the workflow
     inputs:
-      Apply:
+      apply:
         description: 'Executar o terraform apply?'
         required: true
         default: 'false'
@@ -12,6 +12,25 @@ on:
         options:
           - true
           - false
+
+      plan_destroy:
+        description: 'Executar o plan antes do destroy?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false   
+
+
+      destroy:
+        description: 'Executar o Destroy?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false                 
 
 permissions:
   id-token: write
@@ -51,3 +70,11 @@ jobs:
       - name: Terraform applying
         run: terraform apply -auto-approve tfplan
         if: github.event.inputs.apply == 'true'
+
+      - name: Destroy planning
+        run: terraform plan -destroy -out=tfplan
+        if: github.event.inputs.plan_destroy == 'true'
+
+      - name: Destroy Environment
+        run: terraform apply -destroy -auto-approve tfplan
+        if: github.event.inputs.destroy == 'true'
