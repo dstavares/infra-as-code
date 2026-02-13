@@ -1,0 +1,53 @@
+name: terraform CI/CD
+
+#Initiation Event
+on:
+  workflow_dispatch: # Allow manual triggering of the workflow
+    inputs:
+      Apply:
+        description: 'Executar o terraform apply?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - true
+          - false
+
+permissions:
+  id-token: write
+  contents: read
+        
+#Runners (nothing but VM used to execute the commands)
+jobs:
+  job1:
+    name: Terraform
+    runs-on: ubuntu-latest
+    steps: #This setp is used to clone repository to VM.
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+# In this session previously we have create a identity for github on IAM and create a role read/write to S3/ec2/ecr resources.
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v6.0.0
+        with:
+          audience: sts.amazonaws.com.cn
+          aws-region: us-east-2
+          role-to-assume: arn:aws:iam::622718430379:role/GitHubInfraRole
+
+# Install the terraform on VM
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v3.1.2
+
+# Executing the terraform
+      - name: Terraform Initiation
+        run: terraform Init
+
+      - name: Terraform Validation
+        run: terraform validate
+
+      - name: Terraform planning
+        run: terraform plan -out=tfplan
+
+      - name: Terraform applying
+        run: terraform apply -auto-approve tfplan
+        if: github.event.inputs.apply == 'true'
