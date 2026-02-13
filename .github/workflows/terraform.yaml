@@ -40,7 +40,7 @@ jobs:
 
 # Executing the terraform
       - name: Terraform Initiation
-        run: terraform Init
+        run: terraform init
 
       - name: Terraform Validation
         run: terraform validate
